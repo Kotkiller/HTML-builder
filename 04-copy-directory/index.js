@@ -2,7 +2,6 @@
 const fsp = require('fs/promises');
 const fs = require('fs');
 const path = require('path');
-
 const pathToCopiedFilesDir = path.join(__dirname, 'files-copy');
 const pathToFilesDir = path.join(__dirname, 'files');
 
@@ -20,9 +19,7 @@ function copy() {
             if (file.isFile()) {
                 const pathToFile = path.join(__dirname, 'files', `${file.name}`);
                 const pathToCopiedFile = path.join(__dirname, 'files-copy', `${file.name}`);
-                
-                fs.copyFile(pathToFile, pathToCopiedFile, () => {});
-                
+                fs.copyFile(pathToFile, pathToCopiedFile, () => {});                
             }
         })
     });

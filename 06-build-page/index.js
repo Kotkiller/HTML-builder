@@ -1,28 +1,17 @@
 const fsp = require('fs/promises');
 const fs = require('fs');
 const path = require('path');
-
-
-// ==========================================================================================
-// ==========================================================================================
-
-const pathToDist = path.join(__dirname, 'project-dist');
-// __________________________________________________________________________
-
-const pathToDistStyle = path.join(__dirname, 'project-dist', 'style.css');
+const pathToDistDir = path.join(__dirname, 'project-dist');
+const pathToDistDirStyle = path.join(__dirname, 'project-dist', 'style.css');
 const pathToStyle = path.join(__dirname, 'styles');
-// __________________________________________________________________________
-
-const pathToAssets = path.join(__dirname, 'assets'); 
-const pathToCopiedAssets = path.join(pathToDist, 'assets'); 
-// __________________________________________________________________________
-
-const pathToDistIndex = path.join(__dirname, 'project-dist', 'index.html');
-const pathToTemplate = path.join(__dirname, 'template.html');
-const pathToComponents = path.join(__dirname, 'components');
+const pathToAssetsDir = path.join(__dirname, 'assets'); 
+const pathToCopiedAssetsDir = path.join(pathToDistDir, 'assets'); 
+const pathToDistDirHTML = path.join(__dirname, 'project-dist', 'index.html');
+const pathToTemplateFile = path.join(__dirname, 'template.html');
+const pathToComponentsDir = path.join(__dirname, 'components');
 
 function addStyle() {
-    fsp.rm(pathToDistStyle, { force: true }).then(() => {
+    fsp.rm(pathToDistDirStyle, { force: true }).then(() => {
         fs.readdir(pathToStyle, { withFileTypes: true }, (_, files) => {
             let chain = Promise.resolve();
             files.forEach((file) => {
@@ -35,7 +24,7 @@ function addStyle() {
                                 return fsp.readFile(pathToFile);
                             })
                             .then((data) => {
-                                return fsp.appendFile(pathToDistStyle, data);
+                                return fsp.appendFile(pathToDistDirStyle, data);
                             })
                     }   
                 }
@@ -44,18 +33,18 @@ function addStyle() {
     });
 }
 
-function copyAssets(pathToAssets, pathToCopiedAssets) {
-    fs.readdir(pathToAssets, { withFileTypes: true }, (_, items) => {
+function copyAssets(pathToAssetsDir, pathToCopiedAssetsDir) {
+    fs.readdir(pathToAssetsDir, { withFileTypes: true }, (_, items) => {
         items.forEach((item) => {
             if (item.isFile()) {
-                const pathToFile = path.join(pathToAssets, item.name);
-                const pathToCopiedFile = path.join(pathToCopiedAssets, item.name);
+                const pathToFile = path.join(pathToAssetsDir, item.name);
+                const pathToCopiedFile = path.join(pathToCopiedAssetsDir, item.name);
                 
                 fsp.copyFile(pathToFile, pathToCopiedFile);
                 
             } else if (item.isDirectory()) {
-                const nestedPath = path.join(pathToAssets, item.name);
-                const nestedPathToCopied = path.join(pathToCopiedAssets, item.name);
+                const nestedPath = path.join(pathToAssetsDir, item.name);
+                const nestedPathToCopied = path.join(pathToCopiedAssetsDir, item.name);
                 fsp.mkdir(nestedPathToCopied).then(() => copyAssets(nestedPath, nestedPathToCopied));
             }
         })
@@ -63,22 +52,22 @@ function copyAssets(pathToAssets, pathToCopiedAssets) {
 };
 
 function copyContent() {
-    return fsp.mkdir(pathToDist)
+    return fsp.mkdir(pathToDistDir)
         .then(() => addStyle())
-        .then(() => fsp.mkdir(pathToCopiedAssets))
+        .then(() => fsp.mkdir(pathToCopiedAssetsDir))
         .then(() => {
             createIndexHTML();
-            copyAssets(pathToAssets, pathToCopiedAssets);
+            copyAssets(pathToAssetsDir, pathToCopiedAssetsDir);
         });
 }
 
 function createIndexHTML() {
-    fs.readdir(pathToComponents, { withFileTypes: true }, (_, files) => {
-        const filesPath = files.map(file => path.join(pathToComponents, file.name));
+    fs.readdir(pathToComponentsDir, { withFileTypes: true }, (_, files) => {
+        const filesPath = files.map(file => path.join(pathToComponentsDir, file.name));
         const filesContent = filesPath.map(filePath => fsp.readFile(filePath));
 
         Promise.all([
-            fsp.readFile(pathToTemplate),
+            fsp.readFile(pathToTemplateFile),
             ...filesContent, 
         ]).then(([template, ...contents]) => {
             let result = template.toString();
@@ -87,16 +76,16 @@ function createIndexHTML() {
                 const fileName = files[index].name.split('.')[0];
                 result = result.replace(`{{${fileName}}}`, contentString);
             });
-            fsp.appendFile(pathToDistIndex, result);
+            fsp.appendFile(pathToDistDirHTML, result);
         })
     })
 }
 
-fs.access(pathToDist, (error) => {
+fs.access(pathToDistDir, (error) => {
     if (error) {
         copyContent();
     } else {
-        fsp.rmdir(pathToDist, { recursive: true })
+        fsp.rmdir(pathToDistDir, { recursive: true })
             .then(() => copyContent())
     }
 })
