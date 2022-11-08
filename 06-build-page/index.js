@@ -85,7 +85,7 @@ fs.access(pathToDistDir, (error) => {
     if (error) {
         copyContent();
     } else {
-        fsp.rmdir(pathToDistDir, { recursive: true })
+        fsp.rm(pathToDistDir, { recursive: true })
             .then(() => copyContent())
     }
 })
