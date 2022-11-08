@@ -9,7 +9,7 @@ fs.access(pathToCopiedFilesDir, (error) => {
     if (error) {
         fsp.mkdir(pathToCopiedFilesDir).then(() => copy());
     } else {
-        fsp.rmdir(pathToCopiedFilesDir, { recursive: true }).then(() => fsp.mkdir(pathToCopiedFilesDir)).then(() => copy());
+        fsp.rm(pathToCopiedFilesDir, { recursive: true }).then(() => fsp.mkdir(pathToCopiedFilesDir)).then(() => copy());
     }
 })
 
